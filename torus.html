@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>900 FPS Spinning Donut</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #000;
+    }
+    #info {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      color: #0f0;
+      font-family: monospace;
+      font-size: 12px;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <div id="info">Target: 900 FPS (actual depends on GPU/monitor)</div>
+
+  <!-- Three.js -->
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+
+  <script>
+    // ============================
+    // SCENE SETUP
+    // ============================
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(
+      60,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
+    );
+    camera.position.z = 5;
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    document.body.appendChild(renderer.domElement);
+
+    // ============================
+    // LIGHTING
+    // ============================
+    const ambient = new THREE.AmbientLight(0xffffff, 0.3);
+    scene.add(ambient);
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    keyLight.position.set(5, 5, 5);
+    scene.add(keyLight);
+
+    const rimLight = new THREE.DirectionalLight(0x00ffff, 0.8);
+    rimLight.position.set(-5, -3, -5);
+    scene.add(rimLight);
+
+    // ============================
+    // HIGHLY DETAILED DONUT (TORUS)
+    // ============================
+    const geometry = new THREE.TorusGeometry(
+      1.2,     // radius
+      0.45,    // tube
+      512,     // radial segments (HIGH DETAIL)
+      1024     // tubular segments (VERY HIGH DETAIL)
+    );
+
+    const material = new THREE.MeshStandardMaterial({
+      color: 0xffaa00,
+      metalness: 0.85,
+      roughness: 0.25,
+      emissive: 0x331100,
+      envMapIntensity: 1.2
+    });
+
+    const donut = new THREE.Mesh(geometry, material);
+    scene.add(donut);
+
+    // ============================
+    // FPS CONTROL (900 FPS TARGET)
+    // ============================
+    const TARGET_FPS = 900;
+    const FRAME_TIME = 1000 / TARGET_FPS;
+    let lastTime = performance.now();
+
+    function animate(now) {
+      requestAnimationFrame(animate);
+
+      const delta = now - lastTime;
+      if (delta < FRAME_TIME) return;
+      lastTime = now - (delta % FRAME_TIME);
+
+      // Ultra-smooth spin
+      donut.rotation.x += 0.004;
+      donut.rotation.y += 0.006;
+      donut.rotation.z += 0.002;
+
+      renderer.render(scene, camera);
+    }
+
+    animate(performance.now());
+
+    // ============================
+    // RESIZE HANDLING
+    // ============================
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
